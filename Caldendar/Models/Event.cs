@@ -8,10 +8,7 @@ namespace Caldendar.Models
     public class Event
     {
         //TODO check for valid entries
-        public int month { get; set; }
-        public int date { get; set; }
-        public int hour { get; set; }
-        public int minutes { get; set; }
+        public DateTime dt;
         public int duration { get; set; }
         public string name { get; set; }
     }
