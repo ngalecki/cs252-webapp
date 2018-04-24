@@ -1,0 +1,41 @@
+﻿@using Caldendar.Models
+@{
+    ViewBag.Title = "DefaultPage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Calendar</h2>
+
+@using (Html.BeginForm("CalendarEvent", "Calendar", FormMethod.Post))
+{
+    <input id="datebox" type="text" name="datebox" class="date-picker" value="@ViewBag.InitDate"/>
+    <br />
+    <input type="submit" name="ShowEvents" value="Show Events" id="btnCreate" runat="server" title="Show Events" class="btn btn-default" />
+    <input type="submit" name="Create" value="Create New Event" id="btnCreate" runat="server" title="Create New Event" class="btn btn-default" />
+}
+
+@{
+    if (ViewBag.Error != null)
+    {
+        <p>@ViewBag.Error</p>
+    }
+}
+
+@{ 
+    if(ViewBag.Events != null)
+    {
+        foreach (Event ev in ViewBag.Events)
+        {
+            <div>
+                <p>Name: @ev.name</p>
+                @{ if (ev.dt.TimeOfDay != new TimeSpan(0, 0, 0))
+                    {
+                        <p>Time: @ev.dt.ToString("h:mm tt")</p>
+                    }
+                }
+                <p>Duration: @ev.duration</p>
+            </div>
+            <br />
+        }
+    }
+}
