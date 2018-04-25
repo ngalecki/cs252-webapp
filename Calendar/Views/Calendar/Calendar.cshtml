@@ -8,10 +8,12 @@
 
 @using (Html.BeginForm("CalendarEvent", "Calendar", FormMethod.Post))
 {
-    <input id="datebox" type="text" name="datebox" class="date-picker" value="@ViewBag.InitDate"/>
+    <input id="datebox" type="text" name="datebox" class="date-picker" value="@ViewBag.InitDate" />
     <br />
-    <input type="submit" name="ShowEvents" value="Show Events" id="btnCreate" runat="server" title="Show Events" class="btn btn-default" />
-    <input type="submit" name="Create" value="Create New Event" id="btnCreate" runat="server" title="Create New Event" class="btn btn-default" />
+    <br />
+    <input type="submit" name="ShowEvents" value="Show Events" id="btnShowEvents" runat="server" title="Show Events" class="btn btn-default" />
+    <input type="submit" name="CreateDueDate" value="Create New Due Date" id="btnCreateDueDate" runat="server" title="Create New Due Date" class="btn btn-default" />
+    <input type="submit" name="CreateEvent" value="Create New Event" id="btnCreateEvent" runat="server" title="Create New Event" class="btn btn-default" />
 }
 
 @{
@@ -21,8 +23,34 @@
     }
 }
 
-@{ 
-    if(ViewBag.Events != null)
+<br />
+
+<h2>Work for Today:</h2>
+@{
+    if (ViewBag.WorkAssignments != null)
+    {
+        foreach (WorkAssignment wa in ViewBag.WorkAssignments)
+        {
+            <div>
+                <p>Name: @wa.name</p>
+                <p>Hours to Work Today: @wa.duration</p>
+            </div>
+            <br />
+        }
+    }
+    else
+    {
+        <div class="container rounded">
+            <h4>No Work Today!</h4>
+        </div>
+    }
+}
+
+<br />
+
+<h2>Events</h2>
+@{
+    if (ViewBag.Events != null)
     {
         foreach (Event ev in ViewBag.Events)
         {
@@ -37,5 +65,11 @@
             </div>
             <br />
         }
+    }
+    else
+    {
+        <div class="container rounded">
+            <h4>No Events Today!</h4>
+        </div>
     }
 }

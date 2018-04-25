@@ -1,0 +1,29 @@
+﻿
+@{
+    ViewBag.Title = "CreateDueDate";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create Due Date</h2>
+
+@using (Html.BeginForm("SubmitCreateDueDate", "Calendar", FormMethod.Post))
+{
+    <label>Name: </label>
+    <input ID="name" type="text" name="name" />
+    <br />
+
+    <label>Date: </label>
+    <input ID="date" value="@ViewBag.Date" type="text" class="date-picker" name="date" />
+    <br />
+
+    <label>Time: </label>
+    <input ID="time" type="text" class="time-picker" name="time" />
+    <br />
+
+    <label>Hours Required: </label>
+    <input ID="duration" type="text" name="hours" />
+    <br />
+
+    <input type="submit" class="btn btn-primary" />
+}
+

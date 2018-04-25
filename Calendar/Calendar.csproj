@@ -146,6 +146,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\WorkAssignment.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\DueDate.cs" />
     <Compile Include="Models\Event.cs" />
@@ -286,6 +287,7 @@
     <Content Include="Views\Calendar\Calendar.cshtml" />
     <Content Include="Views\Calendar\Index.cshtml" />
     <Content Include="Views\Calendar\CreateEvent.cshtml" />
+    <Content Include="Views\Calendar\CreateDueDate.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

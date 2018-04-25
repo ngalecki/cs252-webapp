@@ -34,9 +34,9 @@ namespace Caldendar.Controllers
 
         // Create Page
         [HttpPost]
-        public ActionResult CalendarEvent(string datebox,string Create,string ShowEvents)
+        public ActionResult CalendarEvent(string datebox,string CreateEvent,string ShowEvents,string CreateDueDate)
         {
-            if (!String.IsNullOrWhiteSpace(Create))
+            if (!String.IsNullOrWhiteSpace(CreateEvent))
             {
                 //create new event
                 if (String.IsNullOrWhiteSpace(datebox))
@@ -47,7 +47,7 @@ namespace Caldendar.Controllers
                 ViewBag.Date = datebox;
                 return View("CreateEvent");
             }
-            else
+            else if(!String.IsNullOrWhiteSpace(ShowEvents))
             {
                 //show events
                 if (String.IsNullOrWhiteSpace(datebox))
@@ -55,39 +55,24 @@ namespace Caldendar.Controllers
                     ViewBag.Error = "Invalid Date";
                     return View("Calendar");
                 }
-                //get all events
-                SqlConnection connection = SQLGetConnection();
 
                 DateTime dt = DateTime.Parse(datebox);
                 string dateString = dt.Month + "/" + dt.Day + "/" + dt.Year;
 
-                //dummy data, setting user id to 1 for now
-                string command = @"SELECT ""Name"",duration,""Date"",""Time"" FROM Events WHERE U_ID=1 AND ""Date""='"+dateString+"'";
-
-                connection.Open();
-                SqlDataReader reader = SQLCommandReader(command, connection);
-
-                List<Event> eventList = new List<Event>();
-
-                while (reader.Read())
-                {
-                    Event ev = new Event();
-                    ev.name = (string) reader["Name"];
-                    ev.duration = (int) reader["duration"];
-                    string date = (string) reader["Date"];
-                    string time = (string)reader["Time"];
-
-                    ev.dt = DateTime.Parse(date +" "+ time);
-
-                    eventList.Add(ev);
-                }
-
-                connection.Close();
-                reader.Close();
-
+                ViewBag.WorkAssignments = GetWorkAssignments(1,dateString);
                 ViewBag.InitDate = datebox;
-                ViewBag.Events = eventList;
+                ViewBag.Events = getEvents(1,dateString);
                 return View("Calendar");
+            }
+            else
+            {
+                if (String.IsNullOrWhiteSpace(datebox))
+                {
+                    ViewBag.Error = "Invalid Date";
+                    return View("Calendar");
+                }
+                ViewBag.Date = datebox;
+                return View("CreateDueDate");
             }
         }
 
@@ -106,21 +91,84 @@ namespace Caldendar.Controllers
             ev.name = name;
             ev.duration = Int32.Parse(duration);
 
-            int indexOfColon = time.IndexOf(':');
-            int indexOfSpace = time.IndexOf(' ');
-
-            string hourString = time.Substring(0, indexOfColon);
-            int hour = Int32.Parse(hourString);
-
-            string minuteString = time.Substring(indexOfColon + 1, indexOfSpace - indexOfColon - 1);
-            int minute = Int32.Parse(minuteString);
-
             ev.dt = DateTime.Parse(date + " " + time);
 
             //update database
             SqlConnection connection = SQLGetConnection();
             connection.Open();
             SQLNonQuery(ev.ToSqlInsert(), connection);
+            connection.Close();
+
+            return View("Calendar");
+        }
+        
+        // Create Due Date, then go back to Calendar Page
+        [HttpPost]
+        public ActionResult SubmitCreateDueDate(string name,string date,string time,string hours)
+        {
+            //Create Due Date model object, populate with data
+            DueDate dd = new DueDate();
+
+            //dummy data
+            Random rand = new Random();
+            dd.ID = rand.Next();
+            dd.UserID = 1;
+
+            dd.name = name;
+            dd.requiredHours = Int32.Parse(hours);
+
+            dd.dt = DateTime.Parse(date + " " + time);
+
+            //update database
+            SqlConnection connection = SQLGetConnection();
+            connection.Open();
+            SQLNonQuery(dd.ToSqlInsert(), connection);
+            connection.Close();
+
+            //add Workassignments for DueDate
+            DateTime today = DateTime.Now;
+            double daysUntilDue = (dd.dt.Date - today.Date).TotalDays;
+
+            //split required hours over as many days as possible at minimum 2 hour intervals
+            //defalt to finishing a due date 1 day early
+            DateTime iterator = dd.dt;
+            if (daysUntilDue != 1)
+            {
+                daysUntilDue--; //for finishing 1 day early
+                iterator = iterator.AddDays(-1);
+            }
+            double hoursEachDay = dd.requiredHours / daysUntilDue;
+            if (hoursEachDay < 2) hoursEachDay = 2;
+            if (hoursEachDay > 18){
+                //not possible throw error
+                //TODO
+            }
+
+            //distribute days
+            double hoursAllocated = 0;
+            List<WorkAssignment> waList = new List<WorkAssignment>();
+            while (hoursAllocated < dd.requiredHours)
+            {
+                string itDate = iterator.Month + "/" + iterator.Day + "/" + iterator.Year;
+
+                WorkAssignment wa = new WorkAssignment();
+                wa.name = dd.name;
+                wa.duration = hoursEachDay;
+                wa.DueDate_ID = dd.ID;
+                wa.dt = DateTime.Parse(itDate);
+                wa.ID = rand.Next();
+
+                waList.Add(wa);
+
+                hoursAllocated += hoursEachDay;
+                iterator = iterator.AddDays(-1);
+            }
+
+            connection.Open();
+            foreach(WorkAssignment wa in waList)
+            {
+                SQLNonQuery(wa.ToSqlInsert(), connection);
+            }
             connection.Close();
 
             return View("Calendar");
@@ -147,6 +195,66 @@ namespace Caldendar.Controllers
             SqlCommand cmd = new SqlCommand(command, connection);
 
             cmd.ExecuteNonQuery();
+        }
+
+        public List<Event> getEvents(int UserID,string dateString)
+        {
+            string commandEvents = @"SELECT * FROM Events WHERE U_ID="+UserID+@" AND ""Date""='" + dateString + "'";
+
+            SqlConnection connection = SQLGetConnection();
+            connection.Open();
+            SqlDataReader reader = SQLCommandReader(commandEvents, connection);
+
+            List<Event> eventList = new List<Event>();
+            //List<Event> eventList = getEvents(1,dateString);
+
+            while (reader.Read())
+            {
+                Event ev = new Event();
+                ev.name = (string)reader["Name"];
+                ev.duration = (int)reader["duration"];
+                ev.ID = (int)reader["ID"];
+                ev.UserID = (int)reader["U_ID"];
+                string date = (string)reader["Date"];
+                string time = (string)reader["Time"];
+
+                ev.dt = DateTime.Parse(date + " " + time);
+
+                eventList.Add(ev);
+            }
+
+            reader.Close();
+            connection.Close();
+
+            return eventList;
+        }
+
+        public List<WorkAssignment> GetWorkAssignments(int UserID,string dateString)
+        {
+            string commandEvents = @"SELECT * FROM Events WHERE U_ID=" + UserID + @" AND ""Date""='" + dateString + "'";
+
+            SqlConnection connection = SQLGetConnection();
+            connection.Open();
+            SqlDataReader reader2 = SQLCommandReader(commandEvents, connection);
+
+            List<WorkAssignment> waList = new List<WorkAssignment>();
+
+            while (reader2.Read())
+            {
+                WorkAssignment wa = new WorkAssignment();
+                wa.name = (string)reader2["Name"];
+                wa.ID = (int)reader2["ID"];
+                wa.duration = (int)reader2["Duration"];
+                wa.dt = DateTime.Parse((string)reader2["Date"]);
+                wa.DueDate_ID = (int)reader2["DueDate_ID"];
+
+                waList.Add(wa);
+            }
+
+            reader2.Close();
+            connection.Close();
+
+            return waList;
         }
     }
 
