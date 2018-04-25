@@ -20,6 +20,13 @@ namespace Caldendar.Controllers
         // Calendar Page
         public ActionResult Calendar()
         {
+            DateTime dt = DateTime.Now;
+            string dateString = dt.Month + "/" + dt.Day + "/" + dt.Year;
+
+            ViewBag.DueDates = GetDueDates(1, dateString);
+            ViewBag.WorkAssignments = GetWorkAssignments(1, dateString);
+            ViewBag.InitDate = dt.ToString("MM/dd/yyy");
+            ViewBag.Events = getEvents(1, dateString);
             return View();
         }
 
@@ -59,6 +66,7 @@ namespace Caldendar.Controllers
                 DateTime dt = DateTime.Parse(datebox);
                 string dateString = dt.Month + "/" + dt.Day + "/" + dt.Year;
 
+                ViewBag.DueDates = GetDueDates(1, dateString);
                 ViewBag.WorkAssignments = GetWorkAssignments(1,dateString);
                 ViewBag.InitDate = datebox;
                 ViewBag.Events = getEvents(1,dateString);
@@ -156,6 +164,7 @@ namespace Caldendar.Controllers
                 wa.duration = hoursEachDay;
                 wa.DueDate_ID = dd.ID;
                 wa.dt = DateTime.Parse(itDate);
+                wa.User_ID = 1; //dummy data
                 wa.ID = rand.Next();
 
                 waList.Add(wa);
@@ -172,6 +181,106 @@ namespace Caldendar.Controllers
             connection.Close();
 
             return View("Calendar");
+        }
+
+        [HttpPost]
+        public ActionResult EditEvent(string name,string date,int id,string time,int duration)
+        {
+            ViewBag.Name = name;
+            ViewBag.Date = date;
+            ViewBag.ID = id;
+            ViewBag.Time = time;
+            ViewBag.Duration = duration;
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult SubmitEditEvent(string submit,string delete,string cancel,string name,string date,int id,string time,int duration)
+        {
+            if (!String.IsNullOrEmpty(submit))
+            {
+                //submit button
+                string command = @"UPDATE ""Events"" SET Name='" + name + "', Date='" + date + "', Time='" + time + "', Duration=" + duration + " WHERE ID=" + id + ";";
+
+                SqlConnection connection = SQLGetConnection();
+                connection.Open();
+                SQLNonQuery(command, connection);
+                connection.Close();
+
+                return View("Calendar");
+            }else if (!String.IsNullOrEmpty(delete))
+            {
+                //delete button
+                string command = @"DELETE FROM ""Events"" WHERE ID="+id+";";
+
+                SqlConnection connection = SQLGetConnection();
+                connection.Open();
+                SQLNonQuery(command, connection);
+                connection.Close();
+
+                return View("Calendar");
+            }
+            else
+            {
+                //cancel button
+                return View("Calendar");
+            }
+        }
+
+        [HttpPost]
+        public ActionResult EditDueDate(string name,string date,string time,int id)
+        {
+            ViewBag.Name = name;
+            ViewBag.Date = date;
+            ViewBag.Time = time;
+            ViewBag.ID = id;
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult SubmitEditDueDate(string submit, string delete, string cancel, string name, string date, int id, string time, int hours)
+        {
+            if (!String.IsNullOrEmpty(submit))
+            {
+                //submit button
+
+                //delete all work assignments attached to the dd
+                string command = @"DELETE FROM WorkAssignments WHERE DueDate_ID=" + id + ";";
+                SqlConnection connection = SQLGetConnection();
+                connection.Open();
+                SQLNonQuery(command, connection);
+                connection.Close();
+
+                //delete dd
+                command = @"DELETE FROM DueDates WHERE ID=" + id + ";";
+                SqlConnection connection2 = SQLGetConnection();
+                connection.Open();
+                SQLNonQuery(command, connection2);
+                connection2.Close();
+
+                //submit new duedate, works just as well
+                return SubmitCreateDueDate(name, date, time, hours.ToString());
+            }
+            else if (!String.IsNullOrEmpty(delete))
+            {
+                //delete button
+
+                //delete all work assignments attached to the dd
+                string command = @"DELETE FROM WorkAssignments WHERE DueDate_ID=" + id + ";";
+                SqlConnection connection = SQLGetConnection();
+                connection.Open();
+                SQLNonQuery(command, connection);
+                connection.Close();
+
+                //delete dd
+                command = @"DELETE FROM DueDates WHERE ID=" + id + ";";
+                return View("Calendar");
+            }
+            else
+            {
+                //cancel button
+                return View("Calendar");
+            }
         }
 
         public SqlConnection SQLGetConnection()
@@ -229,13 +338,13 @@ namespace Caldendar.Controllers
             return eventList;
         }
 
-        public List<WorkAssignment> GetWorkAssignments(int UserID,string dateString)
+        public List<WorkAssignment> GetWorkAssignments(int User_ID,string dateString)
         {
-            string commandEvents = @"SELECT * FROM Events WHERE U_ID=" + UserID + @" AND ""Date""='" + dateString + "'";
+            string commandWork = @"SELECT * FROM WorkAssignments WHERE U_ID=" + User_ID + @" AND ""Date""='" + dateString + "'";
 
             SqlConnection connection = SQLGetConnection();
             connection.Open();
-            SqlDataReader reader2 = SQLCommandReader(commandEvents, connection);
+            SqlDataReader reader2 = SQLCommandReader(commandWork, connection);
 
             List<WorkAssignment> waList = new List<WorkAssignment>();
 
@@ -247,6 +356,7 @@ namespace Caldendar.Controllers
                 wa.duration = (int)reader2["Duration"];
                 wa.dt = DateTime.Parse((string)reader2["Date"]);
                 wa.DueDate_ID = (int)reader2["DueDate_ID"];
+                wa.User_ID = (int)reader2["U_ID"];
 
                 waList.Add(wa);
             }
@@ -255,6 +365,35 @@ namespace Caldendar.Controllers
             connection.Close();
 
             return waList;
+        }
+
+        public List<DueDate> GetDueDates(int User_ID,string dateString)
+        {
+            string commandWork = @"SELECT * FROM DueDates WHERE U_ID=" + User_ID + @" AND ""Date""='" + dateString + "';";
+
+            SqlConnection connection = SQLGetConnection();
+            connection.Open();
+            SqlDataReader reader2 = SQLCommandReader(commandWork, connection);
+
+            List<DueDate> ddList = new List<DueDate>();
+
+            while (reader2.Read())
+            {
+                DueDate dd = new DueDate();
+
+                dd.name = (string)reader2["Name"];
+                dd.ID = (int)reader2["ID"];
+                dd.dt = DateTime.Parse((string)reader2["Date"]+" "+(string)reader2["Time"]);
+                dd.UserID = (int)reader2["U_ID"];
+                dd.requiredHours = (int)reader2["Required Hours"];
+
+                ddList.Add(dd);
+            }
+
+            reader2.Close();
+            connection.Close();
+
+            return ddList;
         }
     }
 

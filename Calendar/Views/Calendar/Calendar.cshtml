@@ -11,24 +11,51 @@
     <input id="datebox" type="text" name="datebox" class="date-picker" value="@ViewBag.InitDate" />
     <br />
     <br />
-    <input type="submit" name="ShowEvents" value="Show Events" id="btnShowEvents" runat="server" title="Show Events" class="btn btn-default" />
+    <input type="submit" name="ShowEvents" value="Show Day" id="btnShowEvents" runat="server" title="Show Events" class="btn btn-default" />
     <input type="submit" name="CreateDueDate" value="Create New Due Date" id="btnCreateDueDate" runat="server" title="Create New Due Date" class="btn btn-default" />
     <input type="submit" name="CreateEvent" value="Create New Event" id="btnCreateEvent" runat="server" title="Create New Event" class="btn btn-default" />
 }
 
 @{
-    if (ViewBag.Error != null)
+    if (ViewBag.Error != null && ViewBag.Error != "")
     {
-        <p>@ViewBag.Error</p>
+        <h3 style="color:red;">@ViewBag.Error</h3>
+    }
+}
+
+<br />
+@{
+    if (ViewBag.DueDates != null && ViewBag.DueDates.Count != 0)
+    {
+        <h2>Due Dates:</h2>
+        foreach (DueDate dd in ViewBag.DueDates)
+        {
+            <div>
+                <p>Name: @dd.name</p>
+                <p>Time: @dd.dt.ToString("h:mm tt")</p>
+                @using (Html.BeginForm("EditDueDate", "Calendar", FormMethod.Post))
+                {
+                    string date = dd.dt.Month + "/" + dd.dt.Day + "/" + dd.dt.Year;
+                    string time = dd.dt.ToString("h:mm tt");
+                    <input type="hidden" name="name" value="@dd.name" />
+                    <input type="hidden" name="date" value="@date" />
+                    <input type="hidden" name="time" value="@time" />
+                    <input type="hidden" name="id" value="@dd.ID" />
+
+                    <input type="submit" title="Edit Due Date" value="Edit Due Date" class="btn btn-default" />
+                }
+            </div>
+            <br />
+        }
     }
 }
 
 <br />
 
-<h2>Work for Today:</h2>
 @{
-    if (ViewBag.WorkAssignments != null)
+    if (ViewBag.WorkAssignments != null && ViewBag.WorkAssignments.Count != 0)
     {
+        <h2>Work for Today:</h2>
         foreach (WorkAssignment wa in ViewBag.WorkAssignments)
         {
             <div>
@@ -38,38 +65,35 @@
             <br />
         }
     }
-    else
-    {
-        <div class="container rounded">
-            <h4>No Work Today!</h4>
-        </div>
-    }
 }
 
 <br />
 
-<h2>Events</h2>
+
 @{
-    if (ViewBag.Events != null)
+    if (ViewBag.Events != null && ViewBag.Events.Count != 0)
     {
+        <h2>Events:</h2>
         foreach (Event ev in ViewBag.Events)
         {
             <div>
                 <p>Name: @ev.name</p>
-                @{ if (ev.dt.TimeOfDay != new TimeSpan(0, 0, 0))
-                    {
-                        <p>Time: @ev.dt.ToString("h:mm tt")</p>
-                    }
-                }
+                <p>Time: @ev.dt.ToString("h:mm tt")</p>
                 <p>Duration: @ev.duration</p>
+                @using (Html.BeginForm("EditEvent", "Calendar", FormMethod.Post))
+                {
+                    string date = ev.dt.Month + "/" + ev.dt.Day + "/" + ev.dt.Year;
+                    string time = ev.dt.ToString("h:mm tt");
+                    <input type="hidden" name="name" value="@ev.name" />
+                    <input type="hidden" name="date" value="@date" />
+                    <input type="hidden" name="time" value="@time" />
+                    <input type="hidden" name="id" value="@ev.ID" />
+                    <input type="hidden" name="duration" value="@ev.duration" />
+
+                    <input type="submit" title="Edit Event" value="Edit Event" class="btn btn-default" />
+                }
             </div>
             <br />
         }
-    }
-    else
-    {
-        <div class="container rounded">
-            <h4>No Events Today!</h4>
-        </div>
     }
 }

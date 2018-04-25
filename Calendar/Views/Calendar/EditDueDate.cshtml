@@ -1,0 +1,32 @@
+﻿
+@{
+    ViewBag.Title = "EditDueDate";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Edit Due Date</h2>
+
+@using (Html.BeginForm("SubmitEditDueDate", "Calendar", FormMethod.Post))
+{
+    <label>Name: </label>
+    <input ID="name" type="text" name="name" value="@ViewBag.Name" />
+    <br />
+
+    <label>Date: </label>
+    <input ID="date" value="@ViewBag.Date" type="text" class="date-picker" name="date" />
+    <br />
+
+    <label>Time: </label>
+    <input ID="time" type="text" class="time-picker" name="time" value="@ViewBag.Time" />
+    <br />
+
+    <label>Enter new hours required from now until due date: </label>
+    <input ID="duration" type="text" name="hours" />
+    <br />
+
+    <input type="hidden" name="id" value="@ViewBag.ID" />
+
+    <input type="submit" name="submit" title="Submit" value="Submit" class="btn btn-primary" />
+    <input type="submit" name="delete" title="Delete" value="Delete" class="btn btn-danger" />
+    <input type="submit" name="cancel" value="Cancel" title="Cancel" class="btn btn-default" />
+}
