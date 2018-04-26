@@ -39,15 +39,6 @@ namespace Caldendar.Controllers
             return View();
         }
 
-        // Calendar Page with date already selected
-        [HttpPost]
-        public ActionResult CalendarWithInitDate(string date)
-        {
-            ViewBag.InitDate = date;
-            return View("Calendar");
-        }
-
-
         // Create Page
         [HttpPost]
         public ActionResult CalendarEvent(string datebox,string CreateEvent,string ShowEvents,string CreateDueDate)
@@ -95,6 +86,17 @@ namespace Caldendar.Controllers
                     ViewBag.Error = "Invalid Date";
                     return View("Calendar");
                 }
+
+                DateTime dt = DateTime.Parse(datebox);
+                DateTime now = DateTime.Now;
+                
+                if(dt < now)
+                {
+                    //can't create duedate before current date
+                    ViewBag.Error = "Invalid Date";
+                    return View("Calendar");
+                }
+
                 ViewBag.Date = datebox;
                 return View("CreateDueDate");
             }
@@ -271,7 +273,7 @@ namespace Caldendar.Controllers
         }
 
         [HttpPost]
-        public ActionResult EditDueDate(string name,string date,string time,int id)
+        public ActionResult EditDueDate(string name,string date,string time,int id,int hours)
         {
             //check if signed in
             if (!IsSignedIn())
@@ -284,6 +286,7 @@ namespace Caldendar.Controllers
             ViewBag.Date = date;
             ViewBag.Time = time;
             ViewBag.ID = id;
+            ViewBag.Hours = hours;
             return View();
         }
 
@@ -300,6 +303,21 @@ namespace Caldendar.Controllers
             if (!String.IsNullOrEmpty(submit))
             {
                 //submit button
+
+                DateTime dt = DateTime.Parse(date);
+                DateTime now = DateTime.Now;
+
+                if (dt < now)
+                {
+                    //can't create duedate before current date
+                    ViewBag.Name = name;
+                    ViewBag.Date = date;
+                    ViewBag.Time = time;
+                    ViewBag.ID = id;
+                    ViewBag.Hours = hours;
+                    ViewBag.Error = "Invalid Date";
+                    return View("EditDueDate");
+                }
 
                 //delete all work assignments attached to the dd
                 string command = @"DELETE FROM WorkAssignments WHERE DueDate_ID=" + id + ";";

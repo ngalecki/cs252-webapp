@@ -21,7 +21,7 @@
     <br />
 
     <label>Enter new hours required from now until due date: </label>
-    <input ID="duration" type="text" name="hours" />
+    <input ID="duration" type="text" name="hours" value="@ViewBag.Hours" />
     <br />
 
     <input type="hidden" name="id" value="@ViewBag.ID" />
@@ -29,4 +29,10 @@
     <input type="submit" name="submit" title="Submit" value="Submit" class="btn btn-primary" />
     <input type="submit" name="delete" title="Delete" value="Delete" class="btn btn-danger" />
     <input type="submit" name="cancel" value="Cancel" title="Cancel" class="btn btn-default" />
+}
+@{
+    if (ViewBag.Error != null && ViewBag.Error != "")
+    {
+        <h2 style="color:red">@ViewBag.Error</h2>
+    }
 }
