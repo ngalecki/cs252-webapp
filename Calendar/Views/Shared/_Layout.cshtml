@@ -23,7 +23,16 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Sign In","SignIn","Calendar")</li>
+                    @{ 
+                        if(System.Web.HttpContext.Current.Session["ID"] == null)
+                        {
+                            <li>@Html.ActionLink("Sign In","SignIn","Calendar")</li>
+                        }
+                        else
+                        {
+                            <li>@Html.ActionLink("Sign Out","SignOut","Calendar")</li>
+                        }
+                    }
                     <li>@Html.ActionLink("About","Index","Calendar")</li>
                 </ul>
             </div>

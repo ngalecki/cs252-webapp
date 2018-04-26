@@ -27,3 +27,10 @@
     <input type="submit" class="btn btn-primary" />
 }
 
+@{
+    if (ViewBag.Error != null && ViewBag.Error != "")
+    {
+        <h2 style="color:red">@ViewBag.Error</h2>
+    }
+}
+

@@ -15,7 +15,7 @@
     <br />
 
     <label>Date: </label>
-    <input ID="date" value="@ViewBag.Date" type="text" class="date-picker" name="date"/>
+    <input ID="date" value="@ViewBag.Date" type="text" class="date-picker" name="date" />
     <br />
 
     <label>Time: </label>
@@ -27,4 +27,11 @@
     <br />
 
     <input type="submit" class="btn btn-primary" />
+}
+
+@{
+    if (ViewBag.Error != null && ViewBag.Error != "")
+    {
+        <h2 style="color:red">@ViewBag.Error</h2>
+    }
 }

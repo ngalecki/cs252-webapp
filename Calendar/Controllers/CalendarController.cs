@@ -21,13 +21,20 @@ namespace Caldendar.Controllers
         // Calendar Page
         public ActionResult Calendar()
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             DateTime dt = DateTime.Now;
             string dateString = dt.Month + "/" + dt.Day + "/" + dt.Year;
 
-            ViewBag.DueDates = GetDueDates(1, dateString);
-            ViewBag.WorkAssignments = GetWorkAssignments(1, dateString);
+            ViewBag.DueDates = GetDueDates((int)System.Web.HttpContext.Current.Session["ID"], dateString);
+            ViewBag.WorkAssignments = GetWorkAssignments((int)System.Web.HttpContext.Current.Session["ID"], dateString);
             ViewBag.InitDate = dt.ToString("MM/dd/yyy");
-            ViewBag.Events = getEvents(1, dateString);
+            ViewBag.Events = getEvents((int)System.Web.HttpContext.Current.Session["ID"], dateString);
             return View();
         }
 
@@ -44,6 +51,13 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult CalendarEvent(string datebox,string CreateEvent,string ShowEvents,string CreateDueDate)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             if (!String.IsNullOrWhiteSpace(CreateEvent))
             {
                 //create new event
@@ -67,10 +81,10 @@ namespace Caldendar.Controllers
                 DateTime dt = DateTime.Parse(datebox);
                 string dateString = dt.Month + "/" + dt.Day + "/" + dt.Year;
 
-                ViewBag.DueDates = GetDueDates(1, dateString);
-                ViewBag.WorkAssignments = GetWorkAssignments(1,dateString);
+                ViewBag.DueDates = GetDueDates((int)System.Web.HttpContext.Current.Session["ID"], dateString);
+                ViewBag.WorkAssignments = GetWorkAssignments((int)System.Web.HttpContext.Current.Session["ID"], dateString);
                 ViewBag.InitDate = datebox;
-                ViewBag.Events = getEvents(1,dateString);
+                ViewBag.Events = getEvents((int)System.Web.HttpContext.Current.Session["ID"], dateString);
                 return View("Calendar");
             }
             else
@@ -89,13 +103,19 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult SubmitCreateEvent(string name,string date,string time,string duration)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             //populate event object with data
             Event ev = new Event();
 
-            //dummy data
             Random rand = new Random();
             ev.ID = rand.Next();
-            ev.UserID = 1;
+            ev.UserID = (int) System.Web.HttpContext.Current.Session["ID"];
 
             ev.name = name;
             ev.duration = Int32.Parse(duration);
@@ -115,13 +135,19 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult SubmitCreateDueDate(string name,string date,string time,string hours)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             //Create Due Date model object, populate with data
             DueDate dd = new DueDate();
 
-            //dummy data
             Random rand = new Random();
             dd.ID = rand.Next();
-            dd.UserID = 1;
+            dd.UserID = (int)System.Web.HttpContext.Current.Session["ID"];
 
             dd.name = name;
             dd.requiredHours = Int32.Parse(hours);
@@ -150,7 +176,8 @@ namespace Caldendar.Controllers
             if (hoursEachDay < 2) hoursEachDay = 2;
             if (hoursEachDay > 18){
                 //not possible throw error
-                //TODO
+                ViewBag.Error = "Number of hours required each day not possible";
+                return View("CreateDueDate");
             }
 
             //distribute days
@@ -165,7 +192,7 @@ namespace Caldendar.Controllers
                 wa.duration = hoursEachDay;
                 wa.DueDate_ID = dd.ID;
                 wa.dt = DateTime.Parse(itDate);
-                wa.User_ID = 1; //dummy data
+                wa.User_ID = (int)System.Web.HttpContext.Current.Session["ID"];
                 wa.ID = rand.Next();
 
                 waList.Add(wa);
@@ -187,6 +214,13 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult EditEvent(string name,string date,int id,string time,int duration)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             ViewBag.Name = name;
             ViewBag.Date = date;
             ViewBag.ID = id;
@@ -198,6 +232,13 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult SubmitEditEvent(string submit,string delete,string cancel,string name,string date,int id,string time,int duration)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             if (!String.IsNullOrEmpty(submit))
             {
                 //submit button
@@ -231,6 +272,13 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult EditDueDate(string name,string date,string time,int id)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             ViewBag.Name = name;
             ViewBag.Date = date;
             ViewBag.Time = time;
@@ -241,6 +289,13 @@ namespace Caldendar.Controllers
         [HttpPost]
         public ActionResult SubmitEditDueDate(string submit, string delete, string cancel, string name, string date, int id, string time, int hours)
         {
+            //check if signed in
+            if (!IsSignedIn())
+            {
+                ViewBag.Error = "Not signed in";
+                return View("SignIn");
+            }
+
             if (!String.IsNullOrEmpty(submit))
             {
                 //submit button
@@ -312,10 +367,14 @@ namespace Caldendar.Controllers
                     Rfc2898DeriveBytes rfc = new Rfc2898DeriveBytes(password, saltArray, 5000);
                     byte[] enteredHash = rfc.GetBytes(20);
 
+                    reader.Close();
+                    connection.Close();
+
                     if(saltedPass == Convert.ToBase64String(enteredHash))
                     {
                         //correct password
                         ViewBag.Success = "Logged in";
+                        System.Web.HttpContext.Current.Session["ID"] = u.ID;
                         return View("SignIn");
                     }
                     else
@@ -381,6 +440,23 @@ namespace Caldendar.Controllers
             }
         }
 
+        public Boolean IsSignedIn()
+        {
+            //check if signed in
+            if (System.Web.HttpContext.Current.Session["ID"] == null)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public ActionResult SignOut()
+        {
+            System.Web.HttpContext.Current.Session["ID"] = null;
+            ViewBag.Success = "Signed out Successfully";
+            return View("SignIn");
+        }
+
         public SqlConnection SQLGetConnection()
         {
             string connectionString = "Server=tcp:o3418.database.windows.net,1433;Initial Catalog=o3418_db;Persist Security Info=False;User ID=ngalecki;Password=Azure3418;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
@@ -413,7 +489,6 @@ namespace Caldendar.Controllers
             SqlDataReader reader = SQLCommandReader(commandEvents, connection);
 
             List<Event> eventList = new List<Event>();
-            //List<Event> eventList = getEvents(1,dateString);
 
             while (reader.Read())
             {
