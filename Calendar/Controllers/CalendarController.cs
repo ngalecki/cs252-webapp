@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using Caldendar.Models;
@@ -255,6 +256,7 @@ namespace Caldendar.Controllers
                 //delete button
                 string command = @"DELETE FROM ""Events"" WHERE ID="+id+";";
 
+                command = whiteList.Replace(command, "");
                 SqlConnection connection = SQLGetConnection();
                 connection.Open();
                 SQLNonQuery(command, connection);
@@ -302,6 +304,7 @@ namespace Caldendar.Controllers
 
                 //delete all work assignments attached to the dd
                 string command = @"DELETE FROM WorkAssignments WHERE DueDate_ID=" + id + ";";
+
                 SqlConnection connection = SQLGetConnection();
                 connection.Open();
                 SQLNonQuery(command, connection);
@@ -309,6 +312,9 @@ namespace Caldendar.Controllers
 
                 //delete dd
                 command = @"DELETE FROM DueDates WHERE ID=" + id + ";";
+
+                command = whiteList.Replace(command, "");
+
                 SqlConnection connection2 = SQLGetConnection();
                 connection.Open();
                 SQLNonQuery(command, connection2);
@@ -323,6 +329,7 @@ namespace Caldendar.Controllers
 
                 //delete all work assignments attached to the dd
                 string command = @"DELETE FROM WorkAssignments WHERE DueDate_ID=" + id + ";";
+
                 SqlConnection connection = SQLGetConnection();
                 connection.Open();
                 SQLNonQuery(command, connection);
@@ -351,6 +358,7 @@ namespace Caldendar.Controllers
             {
                 //sign in
                 string checkForUsername = @"SELECT * FROM Users WHERE UserName='" + userName + "';";
+
                 SqlConnection connection = SQLGetConnection();
                 connection.Open();
                 SqlDataReader reader = SQLCommandReader(checkForUsername, connection);
@@ -398,6 +406,7 @@ namespace Caldendar.Controllers
             {
                 //create new account
                 string checkForUsername = @"SELECT * FROM Users WHERE UserName='" + userName + "';";
+
                 SqlConnection connection = SQLGetConnection();
                 connection.Open();
                 SqlDataReader reader = SQLCommandReader(checkForUsername, connection);
@@ -430,6 +439,9 @@ namespace Caldendar.Controllers
                     Random rand = new Random();
                     int randID = rand.Next();
                     string newUserCommand = @"INSERT INTO Users(ID,UserName,Salt,Hash) VALUES(" + randID + ",'" + userName + "','" + salt + "','" + saltedHash + "');";
+
+                    newUserCommand = whiteList.Replace(newUserCommand, "");
+
                     connection.Open();
                     SQLNonQuery(newUserCommand, connection);
                     connection.Close();
@@ -467,14 +479,20 @@ namespace Caldendar.Controllers
 
         public SqlDataReader SQLCommandReader(string command, SqlConnection connection)
         {
-                SqlCommand cmd = new SqlCommand(command, connection);
+            Regex whiteList = new Regex("[^'a-zA-Z0-9 -]");
+            command = whiteList.Replace(command, "");
 
-                SqlDataReader reader = cmd.ExecuteReader();
-                return reader;
+            SqlCommand cmd = new SqlCommand(command, connection);
+
+            SqlDataReader reader = cmd.ExecuteReader();
+            return reader;
         }
 
         public void SQLNonQuery(string command, SqlConnection connection)
         {
+            Regex whiteList = new Regex("[^'a-zA-Z0-9 -]");
+            command = whiteList.Replace(command, "");
+
             SqlCommand cmd = new SqlCommand(command, connection);
 
             cmd.ExecuteNonQuery();
