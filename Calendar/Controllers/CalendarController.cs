@@ -256,7 +256,6 @@ namespace Caldendar.Controllers
                 //delete button
                 string command = @"DELETE FROM ""Events"" WHERE ID="+id+";";
 
-                command = whiteList.Replace(command, "");
                 SqlConnection connection = SQLGetConnection();
                 connection.Open();
                 SQLNonQuery(command, connection);
@@ -313,12 +312,9 @@ namespace Caldendar.Controllers
                 //delete dd
                 command = @"DELETE FROM DueDates WHERE ID=" + id + ";";
 
-                command = whiteList.Replace(command, "");
-
-                SqlConnection connection2 = SQLGetConnection();
                 connection.Open();
-                SQLNonQuery(command, connection2);
-                connection2.Close();
+                SQLNonQuery(command, connection);
+                connection.Close();
 
                 //submit new duedate, works just as well
                 return SubmitCreateDueDate(name, date, time, hours.ToString());
@@ -440,8 +436,6 @@ namespace Caldendar.Controllers
                     int randID = rand.Next();
                     string newUserCommand = @"INSERT INTO Users(ID,UserName,Salt,Hash) VALUES(" + randID + ",'" + userName + "','" + salt + "','" + saltedHash + "');";
 
-                    newUserCommand = whiteList.Replace(newUserCommand, "");
-
                     connection.Open();
                     SQLNonQuery(newUserCommand, connection);
                     connection.Close();
@@ -479,7 +473,7 @@ namespace Caldendar.Controllers
 
         public SqlDataReader SQLCommandReader(string command, SqlConnection connection)
         {
-            Regex whiteList = new Regex("[^'a-zA-Z0-9 -]");
+            Regex whiteList = new Regex(@"[;]");
             command = whiteList.Replace(command, "");
 
             SqlCommand cmd = new SqlCommand(command, connection);
@@ -490,7 +484,7 @@ namespace Caldendar.Controllers
 
         public void SQLNonQuery(string command, SqlConnection connection)
         {
-            Regex whiteList = new Regex("[^'a-zA-Z0-9 -]");
+            Regex whiteList = new Regex(@"[;]");
             command = whiteList.Replace(command, "");
 
             SqlCommand cmd = new SqlCommand(command, connection);
