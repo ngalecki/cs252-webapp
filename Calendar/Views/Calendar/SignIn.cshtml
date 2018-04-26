@@ -1,0 +1,35 @@
+﻿
+@{
+    ViewBag.Title = "SignIn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>SignIn</h2>
+
+@using (Html.BeginForm("SubmitSignIn", "Calendar", FormMethod.Post))
+{
+    <label>User Name: </label>
+    <input ID="userName" type="text" name="userName" />
+    <br />
+
+    <label>Password: </label>
+    <input ID="password" type="password" name="password" />
+    <br />
+
+    <input type="submit" id="signIn" name="signIn" class="btn btn-primary" value="Sign In" title="Sign In" />
+    <input type="submit" id="newAccount" name="newAccount" class="btn btn-primary" value="Create New Account" title="Create New Account" />
+}
+
+@{
+    if (ViewBag.Error != null && ViewBag.Error != "")
+    {
+        <h2 style="color:red">@ViewBag.Error</h2>
+    }
+}
+
+@{
+    if (ViewBag.Success != null && ViewBag.Success != "")
+    {
+        <h2>@ViewBag.Success</h2>
+    }
+}

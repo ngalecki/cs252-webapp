@@ -290,6 +290,7 @@
     <Content Include="Views\Calendar\CreateDueDate.cshtml" />
     <Content Include="Views\Calendar\EditEvent.cshtml" />
     <Content Include="Views\Calendar\EditDueDate.cshtml" />
+    <Content Include="Views\Calendar\SignIn.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

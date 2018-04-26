@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Web;
 using System.Web.Mvc;
 using Caldendar.Models;
@@ -280,6 +281,103 @@ namespace Caldendar.Controllers
             {
                 //cancel button
                 return View("Calendar");
+            }
+        }
+
+        public ActionResult SignIn()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult SubmitSignIn(string signIn,string newAccount,string userName,string password)
+        {
+            if (!String.IsNullOrEmpty(signIn))
+            {
+                //sign in
+                string checkForUsername = @"SELECT * FROM Users WHERE UserName='" + userName + "';";
+                SqlConnection connection = SQLGetConnection();
+                connection.Open();
+                SqlDataReader reader = SQLCommandReader(checkForUsername, connection);
+
+                if (reader.HasRows)
+                {
+                    //username found
+                    reader.Read();
+                    User u = new User();
+                    u.name = (string)reader["UserName"];
+                    u.ID = (int)reader["ID"];
+                    string saltedPass = (string)reader["Hash"];
+                    byte[] saltArray = Convert.FromBase64String((string)reader["Salt"]);
+                    Rfc2898DeriveBytes rfc = new Rfc2898DeriveBytes(password, saltArray, 5000);
+                    byte[] enteredHash = rfc.GetBytes(20);
+
+                    if(saltedPass == Convert.ToBase64String(enteredHash))
+                    {
+                        //correct password
+                        ViewBag.Success = "Logged in";
+                        return View("SignIn");
+                    }
+                    else
+                    {
+                        //incorrect password
+                        ViewBag.Error = "Incorrect password";
+                        return View("SignIn");
+                    }
+
+                }
+                else
+                {
+                    //not found, spit back error
+                    reader.Close();
+                    connection.Close();
+                    ViewBag.Error = "User name not found";
+                    return View("SignIn");
+                }
+            }
+            else
+            {
+                //create new account
+                string checkForUsername = @"SELECT * FROM Users WHERE UserName='" + userName + "';";
+                SqlConnection connection = SQLGetConnection();
+                connection.Open();
+                SqlDataReader reader = SQLCommandReader(checkForUsername, connection);
+
+                if (reader.HasRows)
+                {
+                    //username found,spit back error
+                    reader.Close();
+                    connection.Close();
+                    ViewBag.Error = "User name already taken";
+                    return View("SignIn");
+                }
+                else
+                {
+                    //not found, proceed
+                    reader.Close();
+                    connection.Close();
+
+                    //create salt, get salted hash
+                    byte[] saltArray;
+                    RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+                    rng.GetBytes(saltArray = new byte[16]);
+                    Rfc2898DeriveBytes rfc = new Rfc2898DeriveBytes(password,saltArray,5000);
+                    byte[] hashed = rfc.GetBytes(20);
+
+                    //convert salt and salted hash to base 64 string to store
+                    string saltedHash = Convert.ToBase64String(hashed);
+                    string salt = Convert.ToBase64String(saltArray);
+
+                    Random rand = new Random();
+                    int randID = rand.Next();
+                    string newUserCommand = @"INSERT INTO Users(ID,UserName,Salt,Hash) VALUES(" + randID + ",'" + userName + "','" + salt + "','" + saltedHash + "');";
+                    connection.Open();
+                    SQLNonQuery(newUserCommand, connection);
+                    connection.Close();
+
+                    ViewBag.Success = "Successfully created new user!";
+                    return View("SignIn");
+                }
             }
         }
 

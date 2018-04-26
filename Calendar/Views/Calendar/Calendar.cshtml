@@ -29,23 +29,24 @@
     {
         <h2>Due Dates:</h2>
         foreach (DueDate dd in ViewBag.DueDates)
-        {
-            <div>
-                <p>Name: @dd.name</p>
-                <p>Time: @dd.dt.ToString("h:mm tt")</p>
-                @using (Html.BeginForm("EditDueDate", "Calendar", FormMethod.Post))
-                {
-                    string date = dd.dt.Month + "/" + dd.dt.Day + "/" + dd.dt.Year;
-                    string time = dd.dt.ToString("h:mm tt");
-                    <input type="hidden" name="name" value="@dd.name" />
-                    <input type="hidden" name="date" value="@date" />
-                    <input type="hidden" name="time" value="@time" />
-                    <input type="hidden" name="id" value="@dd.ID" />
+        {            
+            <div class="panel" style="background-color:#e2e0e0">
+                    <div class="panel-body">
+                        <p><b>Name: @dd.name</b></p>
+                        <p><b>Time: @dd.dt.ToString("h:mm tt")</b></p>
+                         @using (Html.BeginForm("EditDueDate", "Calendar", FormMethod.Post))
+                         {
+                            string date = dd.dt.Month + "/" + dd.dt.Day + "/" + dd.dt.Year;
+                            string time = dd.dt.ToString("h:mm tt");
+                            <input type="hidden" name="name" value="@dd.name" />
+                            <input type="hidden" name="date" value="@date" />
+                            <input type="hidden" name="time" value="@time" />
+                            <input type="hidden" name="id" value="@dd.ID" />
 
-                    <input type="submit" title="Edit Due Date" value="Edit Due Date" class="btn btn-default" />
-                }
+                            <input type="submit" title="Edit Due Date" value="Edit Due Date" class="btn btn-default" />
+                         }
+                    </div>
             </div>
-            <br />
         }
     }
 }
@@ -56,14 +57,17 @@
     if (ViewBag.WorkAssignments != null && ViewBag.WorkAssignments.Count != 0)
     {
         <h2>Work for Today:</h2>
+
         foreach (WorkAssignment wa in ViewBag.WorkAssignments)
         {
-            <div>
-                <p>Name: @wa.name</p>
-                <p>Hours to Work Today: @wa.duration</p>
+            <div class="panel" style="background-color:#e2e0e0">
+                <div class="panel-body">
+                  <p><b>@wa.name: @wa.duration Hours</b></p>
+                </div>
             </div>
-            <br />
+
         }
+
     }
 }
 
@@ -76,24 +80,25 @@
         <h2>Events:</h2>
         foreach (Event ev in ViewBag.Events)
         {
-            <div>
-                <p>Name: @ev.name</p>
-                <p>Time: @ev.dt.ToString("h:mm tt")</p>
-                <p>Duration: @ev.duration</p>
-                @using (Html.BeginForm("EditEvent", "Calendar", FormMethod.Post))
-                {
-                    string date = ev.dt.Month + "/" + ev.dt.Day + "/" + ev.dt.Year;
-                    string time = ev.dt.ToString("h:mm tt");
-                    <input type="hidden" name="name" value="@ev.name" />
-                    <input type="hidden" name="date" value="@date" />
-                    <input type="hidden" name="time" value="@time" />
-                    <input type="hidden" name="id" value="@ev.ID" />
-                    <input type="hidden" name="duration" value="@ev.duration" />
+            <div class="panel" style="background-color:#e2e0e0">
+                    <div class="panel-body">
+                        
+                                <p><b>@ev.name: @ev.dt.ToString("h:mm tt")</b></p>
+                                <p><b>Duration: @ev.duration Hours</b></p>
+                                @using (Html.BeginForm("EditEvent", "Calendar", FormMethod.Post))
+                                {
+                                    string date = ev.dt.Month + "/" + ev.dt.Day + "/" + ev.dt.Year;
+                                    string time = ev.dt.ToString("h:mm tt");
+                                    <input type="hidden" name="name" value="@ev.name" />
+                                    <input type="hidden" name="date" value="@date" />
+                                    <input type="hidden" name="time" value="@time" />
+                                    <input type="hidden" name="id" value="@ev.ID" />
+                                    <input type="hidden" name="duration" value="@ev.duration" />
 
-                    <input type="submit" title="Edit Event" value="Edit Event" class="btn btn-default" />
-                }
+                                    <input type="submit" title="Edit Event" value="Edit Event" class="btn btn-default" />
+                                }
+                    </div>
             </div>
-            <br />
         }
     }
 }
